@@ -55,11 +55,13 @@
 
             var animal = shuffledAnimals[animalNumber];
             var uniqueDescription = $"Button {animalNumber}";
+            var riddleMark = riddle[animalNumber];
+            int index = animalNumber;
 
                 <div class="col-3">
-                    <button @onclick="@(() => ButtonClick(animal, uniqueDescription))"
+                <button @onclick="@(() => ButtonClick(animal, uniqueDescription, index))"
                         type="button" class="btn btn-outline-dark">
-                        <h1>@animal</h1>
+                    <h1>@riddleMark</h1>
                     </button>
                 </div>
         }
@@ -89,7 +91,7 @@
 @code {
 
     List<string> animalEmoji = new List<string>()
-{
+    {
         "🐕", "🐕",
         "🐱", "🐱",
         "🐎", "🐎",
@@ -98,7 +100,19 @@
         "🍎", "🍎",
         "🍌", "🍌",
         "🐘", "🐘",
-};
+    };
+
+    List<string> riddle = new List<string>
+    {
+        "❓","❓",
+        "❓","❓",
+        "❓","❓",
+        "❓","❓",
+        "❓","❓",
+        "❓","❓",
+        "❓","❓",
+        "❓","❓",
+    };
 
     List<string> shuffledAnimals = new List<string>();
 
@@ -140,7 +154,7 @@
         DifficultyLevel = "Level 1";
 
         // This is the total time of level 1;
-        totalTimeOfDifferentLevel = 10.0f;
+        totalTimeOfDifferentLevel = 50.0f;
 
         // When the website open the first game apperance, it will show you the total time of level 1
         timeDisplay = $"{totalTimeOfDifferentLevel}s - Play Level 1?";
@@ -158,6 +172,11 @@
         .OrderBy(item => random.Next())
         .ToList();
 
+        for (int i = 0; i < 16; i++)
+        {
+            riddle[i] = "❓";
+        }
+
         matchesFound = 0;
 
         tenthsOfSecondsElapsed = 0;
@@ -170,29 +189,50 @@
 
     string lastDescription = string.Empty;
 
-    private void ButtonClick(string animal, string animalDescription)
+    // Set firstChoose and secondChoose to keep the first clicked button and second clicked button index
+    int firstChoose;
+
+    int secondChoose;
+
+    // int lastChoose;
+
+    private void ButtonClick(string animal, string animalDescription, int index)
     {
-        // Check if the button is pressed for the first time when the game starts.
-        if (lastAnimalFound == string.Empty)
+
+        // Check if the button is pressed for the first time when the game starts, and if the button image is empty.
+        if ((lastAnimalFound == string.Empty) && (riddle[index] != string.Empty))
         {
+            // When click the wrong button the next clicking will restore the first two buttons' images to question mark, this action need to run first
+            if (riddle[firstChoose] != string.Empty)
+            {
+                riddle[firstChoose] = "❓";
+                riddle[secondChoose] = "❓";
+            }
+
             lastAnimalFound = animal; // Record button image
 
             lastDescription = animalDescription; // Record the clicked button
 
+            firstChoose = index; // Record the first clicked button's index
+
+            riddle[index] = animal; // Flip the image, change it from question mark to image
+
             timer.Start(); // Start timer
         }
         // Check that the images on the buttons clicked twice are the same and that the two clicks are on different buttons
-        else if ((lastAnimalFound == animal) && (animalDescription != lastDescription))
+        else if ((lastAnimalFound == animal) && (animalDescription != lastDescription) && (riddle[index] != string.Empty))
         {
             lastAnimalFound = string.Empty; // clear the data
 
-            shuffledAnimals = shuffledAnimals
+            riddle[index] = animal;
+
+            riddle = riddle
             .Select(a => a.Replace(animal, string.Empty))
             .ToList(); // Replace the image of the button with empty
 
             matchesFound++; // Plus 1 match found
 
-            score++; // Plus 1 point
+            score+=5; // Plus 5 point
 
             // Check if the game is finished
             if (matchesFound == 8)
@@ -207,9 +247,14 @@
             }
 
         }
-        else
+        // Check if the second button has image
+        else if (riddle[index] != string.Empty)
         {
             lastAnimalFound = string.Empty; // If the image of the second clicked button does not match the first, clear the data stored in this variable
+
+            secondChoose = index; // Record the second clicked button's index
+
+            riddle[index] = animal;  // Flip the image, change it from question mark to image
 
             score--; // When there is no successful match, minus one point
         }
@@ -245,7 +290,7 @@
         // Player can click different button to change the game level and reset the game
         if (DifficultyLevel == "Level 1") // When the game level is 1, the total time will be 10.0s
         {
-            totalTimeOfDifferentLevel = 10.0f;
+            totalTimeOfDifferentLevel = 40.0f;
 
             timer.Stop(); // When change level the time will stop
 
@@ -255,7 +300,7 @@
         }
         else if (DifficultyLevel == "Level 2") // When the game level is 2, the total time will be 8.0s
         {
-            totalTimeOfDifferentLevel = 8.0f;
+            totalTimeOfDifferentLevel = 30.0f;
 
             timer.Stop();
 
@@ -265,7 +310,7 @@
         }
         else if (DifficultyLevel == "Level 3") // When the game level is 3, the total time will be 6.0s
         {
-            totalTimeOfDifferentLevel = 6.0f;
+            totalTimeOfDifferentLevel = 20.0f;
 
             timer.Stop();
 
